@@ -34,23 +34,22 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 {
     int id = 0;
     struct nfqnl_msg_packet_hdr *ph;
-    struct nfqnl_msg_packet_hw *hwph;
-    u_int32_t mark,ifi;
-    int ret;
-    unsigned char *data;
+    //struct nfqnl_msg_packet_hw *hwph;
+    //u_int32_t mark,ifi;
+    //int ret;
+    //unsigned char *data;
 
     ph = nfq_get_msg_packet_hdr(tb);
     if (ph) {
         id = ntohl(ph->packet_id);
-        
+        /*
         printf("hw_protocol=0x%04x hook=%u id=%u ",
             ntohs(ph->hw_protocol), ph->hook, id);
-        
+        */
         
     }
-
+    /*
     hwph = nfq_get_packet_hw(tb);
-    
     if (hwph) {
         int i, hlen = ntohs(hwph->hw_addrlen);
         
@@ -59,9 +58,10 @@ static u_int32_t print_pkt (struct nfq_data *tb)
             printf("%02x:", hwph->hw_addr[i]);
         printf("%02x ", hwph->hw_addr[hlen-1]);
         
+        
     }
-    
-    
+    */
+    /*
     mark = nfq_get_nfmark(tb);
     if (mark)
         printf("mark=%u ", mark);
@@ -90,7 +90,7 @@ static u_int32_t print_pkt (struct nfq_data *tb)
     
 
     fputc('\n', stdout);
-
+    */
     return id;
 }
 
@@ -98,7 +98,7 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
           struct nfq_data *nfa, void *data)
 {
-    int i, j;
+int i, j;
     u_int32_t id = print_pkt(nfa);
     u_char *packet;
     int packet_length;
@@ -146,6 +146,8 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 
     printf("Analysing HTTP header!\n");
     char *packet_http_data=(char *)(packet + packet_data_offset);
+    packet_length-=packet_data_offset;
+    
     /*
     if(packet_length > 70){
         for(i=0;i<16;i++){
@@ -162,58 +164,85 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
     printf("%s\n",packet_http_data);
     printf("end------------------------------------------------------\n");
     */
-    char compare[9]="\r\nHost: ";
-    for(i=7;i<packet_data_offset;i++){
-        int flag=0;
-        for(j=0;j<8;j++){
-            if(packet_http_data[i-7+j]!=compare[j]){//packet_heep_data[i-7]~packet_heep_data[i] is same as compare
-                flag=1;
+
+    for(i=0;i<packet_length;i++){
+        if(packet_http_data[i]!=' ' && packet_http_data[i]!='\n' && packet_http_data[i]!='\r'){
+            break;
+        }
+    }
+    char method_store[256];
+    for(j=i;j<packet_length && j< i+7;j++){
+        if(packet_http_data[j]==' ' || packet_http_data[j]=='\n' || packet_http_data[j]=='\r'){
+            break;
+        }
+    }
+    //printf("i : %d j : %d\n", i, j);
+    if((j-i) > 4){
+        printf("This packet doesn't uses get or post method!\n");
+        return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
+    }
+    int imsi_cnt=0;
+    for(i=i;i<j;i++){
+        method_store[imsi_cnt++]=packet_http_data[i];
+    }
+    method_store[imsi_cnt]=0;
+    printf("This packet's method is : %s\n",method_store);
+    if((strcmp(method_store, "GET")!=0) && (strcmp(method_store, "POST")!=0)){
+        printf("This packet doesn't uses get or post method!\n");
+        return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
+    }
+
+    for(;i<packet_length;){
+        char compare[9]="\r\nHost: ";
+        for(i = i + 7;i<packet_length;i++){
+            if(!strncmp(&packet_http_data[i-7], compare, 8)){
                 break;
             }
         }
-        if(flag==0){
-            //printf("I found this %d location!",i + 1);
+        //printf("\n%s\n",&packet_http_data[i-7]);
+        //printf("\n%s\n",&packet_http_data[i+1]);
+        
+        //printf("\n\nI reached here! %d\n", i);
+        
+        //sleep(10);
+        ++i;
+        if(i>=packet_length){
             break;
         }
-    }
-    //printf("\n%s\n",&packet_http_data[i-7]);
-    //printf("\n%s\n",&packet_http_data[i+1]);
-    
-    //printf("\n\nI reached here! %d\n", i);
-    
-    //sleep(10);
-    ++i;
-    if(i>=packet_data_offset){
-        return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
-    }
-    //printf("\n\nI reached here! %d\n", i);
-    char *packet_host_data=(char *)(packet_http_data+i);
-    char hostname[HOST_MAX_LENGTH];
-    for(i=0;i<256;i++){
-        hostname[i]=packet_host_data[i];
-        if(packet_host_data[i]=='\r'){
-            hostname[i]=0;
-            break;
+        //printf("\n\nI reached here! %d\n", i);
+        char *packet_host_data=(char *)(packet_http_data+i);
+        char hostname[HOST_MAX_LENGTH];
+        for(j=0;j<256 && (i+j)<packet_length;j++){
+            hostname[j]=packet_host_data[j];
+            if(packet_host_data[j]=='\r'){
+                hostname[j]=0;
+                break;
+            }
         }
+        //printf("------------------------------------------------------\n");
+        //printf("!!!!Host:%s\n",hostname);
+        //printf("------------------------------------------------------\n");
+        string string_host_name;
+        string_host_name.assign(hostname);
+        //cout << "\nhost_name_string:" << string_host_name << "\n";
+        printf("Host:%s\n", hostname);
+        if(bansiteSet.find(string_host_name)!=bansiteSet.end()){
+            printf("This packet is dropped!\n");
+            return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
+        }
+        i = i + j;
     }
-    //printf("------------------------------------------------------\n");
-    //printf("!!!!Host:%s\n",hostname);
-    //printf("------------------------------------------------------\n");
-    string string_host_name;
-    string_host_name.assign(hostname);
-    //cout << "\nhost_name_string:" << string_host_name << "\n";
-    if(bansiteSet.find(string_host_name)!=bansiteSet.end()){
-        printf("Host:%s\n This is dropped!\n",hostname);
-        return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
-    }
-    else{
-        printf("Host:%s\n This is accepted!\n",hostname);
-        return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
-    }
+    printf("This packet is accepted!\n");
+    return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
 int main(int argc, char **argv)
 {
+    if(argc!=2){
+        printf("usage : ./1m-block blockingsites.txt\n"); 
+        exit(1);
+    }
+
     struct nfq_handle *h;
     struct nfq_q_handle *qh;
     struct nfnl_handle *nh;
