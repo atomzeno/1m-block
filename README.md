@@ -16,39 +16,56 @@ unbinding existing nf_queue handler for AF_INET (if any)
 binding nfnetlink_queue as nf_queue handler for AF_INET    
 binding this socket to queue '0'    
 setting copy_packet mode    
-hw_protocol=0x0800 hook=1 id=1 hw_src_addr=b8:55:10:e0:10:50 indev=2 payload_len=83    
-hw_protocol=0x0800 hook=3 id=2 outdev=2 payload_len=52     
-hw_protocol=0x0800 hook=1 id=3 hw_src_addr=b8:55:10:e0:10:50 indev=2 payload_len=76     
     
 ....
-    
-hw_protocol=0x0800 hook=1 id=783 hw_src_addr=b8:55:10:e0:10:50 indev=2 payload_len=53    
-hw_protocol=0x0800 hook=3 id=784 outdev=2 payload_len=518    
+        
 Analysing HTTP header!    
-Host:livescreensaver.com    
- This is dropped!    
-    
-....
-    
-hw_protocol=0x0800 hook=3 id=938 outdev=2 payload_len=518    
+This packet's method is : GET    
+Host:jd.com    
+This packet is dropped!    
 Analysing HTTP header!    
-Host:livescreensaver.com    
- This is dropped!    
-    
-....
-    
-hw_protocol=0x0800 hook=3 id=942 outdev=2 payload_len=494    
+This packet's method is : GET    
+Host:test.gilgil.net    
+This packet is accepted!    
 Analysing HTTP header!    
-Host:a0baa7ec381fb3b04a7eaba248d417dbf.profile.dxb50-c1.cloudfront.net    
- This is accepted!    
-    
-....
-    
-hw_protocol=0x0800 hook=3 id=1371 outdev=2 payload_len=503    
+This packet's method is : GET    
+Host:jd.com    
+This packet is dropped!    
 Analysing HTTP header!    
-Host:greatfulpots.com    
- This is dropped!    
+This packet's method is : GET    
+Host:jd.com    
+This packet is dropped!    
+Analysing HTTP header!    
+This packet's method is : GET    
+Host:jd.com    
+This packet is dropped!    
+Analysing HTTP header!    
+This packet's method is : GET    
+Host:jd.com    
+This packet is dropped!    
+Analysing HTTP header!    
+This packet's method is : GET    
+Host:google.com    
+This packet is dropped!    
+Analysing HTTP header!    
+This packet's method is : GET    
+Host:jd.com    
+This packet is dropped!    
+Analysing HTTP header!    
+This packet's method is : GET    
+Host:jd.com    
+This packet is dropped!    
+Analysing HTTP header!    
+This packet's method is : GET    
+Host:portal.korea.ac.kr    
+This packet is accepted!    
+Analysing HTTP header!    
+This packet doesn't uses get or post method!    
+Analysing HTTP header!    
+This packet's method is : POST    
+Host:portal.korea.ac.kr    
+This packet is accepted!     
     
 ....
-    
+        
 ^C
