@@ -7,7 +7,7 @@ sudo iptables -A OUTPUT -j NFQUEUE --queue-num 0
 sudo iptables -A INPUT -j NFQUEUE --queue-num 0    
     
 sudo make    
-sudo ./1m-block blockingsites.txt    
+sudo ./1m-block top-1m.txt    
     
 # example of execution    
     
