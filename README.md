@@ -8,6 +8,8 @@ sudo iptables -A INPUT -j NFQUEUE --queue-num 0
     
 sudo make    
 sudo ./1m-block top-1m.txt    
+
+set을 사용하여 string의 존재 유무를 확인하였습니다. 
     
 # example of execution    
     
